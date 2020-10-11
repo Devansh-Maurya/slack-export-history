@@ -23,4 +23,4 @@ Then install the app in your workspace (you can go to `OAuth & Permissions` sect
 
 ## We are ready to download the messages
 
-Go ahead to the terminal and run `python3 slack.py --token COPY_YOUR_OAUTH_TOKEN_HERE`. Choose the DM conversation you want to export and we are done! 
+Go ahead to the terminal and run `python3 slack.py --token COPY_YOUR_OAUTH_TOKEN_HERE`. Choose the DM conversation or channel you want to export and we are done! 
