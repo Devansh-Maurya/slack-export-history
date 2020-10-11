@@ -1,9 +1,9 @@
-# Export DM conversations from Slack
+# Export DM and channel conversations from Slack
 
 To do so, follow two steps:
 
 ## (1) Clone this repo
-`git clone git@github.com:margaritageleta/slack-export-history.git`
+`git clone https://github.com/Devansh-Maurya/slack-export-history.git`
 
 ## (2) Create a Slack App
 Go to https://api.slack.com/apps and go straight to `Create New App`. Choose your Workspace and press `Create App`. Then, click on your app and go to `Add features and functionality` -> `Permissions` -> `Scopes` and add the following scopes in `User Token Scopes` (be careful, `User Token Scopes` NOT `Bot Token Scopes`):
