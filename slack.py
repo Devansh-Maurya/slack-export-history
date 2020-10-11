@@ -58,9 +58,6 @@ def fetch_conversations():
         conversations_dict = {}
         conversations_list = []
         
-        for k, v in conversations_dump.items():
-            print(k, v)
-
         for conver in conversations_dump['channels']:
             if conver['is_im']:
                 conversations_dict[conver['id']] = {
@@ -68,13 +65,13 @@ def fetch_conversations():
                     'name': '_'.join(users[conver['user']]['real_name'].split())
                 }
                 conversations_list.append(conver['id'])
-            if 'is_channel' in conver and conver['is_channel']:
+            elif 'is_channel' in conver and conver['is_channel']:
                 conversations_dict[conver['id']] = {
                     'creator': conver['creator'], 
                     'is_private': conver['is_private'],
                     'name': conver['name']
                 }
-            conversations_list.append(conver['id'])
+                conversations_list.append(conver['id'])
 
         return (conversations_dict, conversations_list)
 
@@ -152,27 +149,22 @@ if __name__ == "__main__":
         # Select chat to export
         title = 'Please the conversation to export: '
         convers, options = fetch_conversations()
-        print(convers, options)
-
-        # option, index = pick([f"Chat {option} with {convers[option]['user_name']}" for option in options], title)
-        # PAYLOAD['channel'] = options[index]
 
         # Create a directory where to store the data
         dir = "slack-data"
-        if os.path.exists(dir):
-            shutil.rmtree(dir)
-        os.makedirs(dir)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
         os.chdir(dir)
 
-        for option in options:
-            PAYLOAD['channel'] = option
+        option, index = pick([f"Chat {option} with {convers[option]['name']}" for option in options], title)
+        PAYLOAD['channel'] = options[index]
 
-            username = convers[option]['user_name']
+        username = convers[options[index]]['name']
 
-            # Export chat
-            print('\nPreparing to export chat ...\n')
-            fetch_message_data(PAYLOAD, username)
+        # Export chat
+        print('\nPreparing to export chat ...\n')
+        fetch_message_data(PAYLOAD, username)
 
-        else:
-            # Auth fail
-            pass
+    else:
+        # Auth fail
+        pass
