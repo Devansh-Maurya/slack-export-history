@@ -53,17 +53,29 @@ def fetch_users():
     return users
 
 def fetch_conversations():
-    with open('conversations.list.json') as f:
+    with open('users.conversations.json') as f:
         conversations_dump = json.loads(f.read())
         conversations_dict = {}
         conversations_list = []
+        
+        for k, v in conversations_dump.items():
+            print(k, v)
+
         for conver in conversations_dump['channels']:
             if conver['is_im']:
                 conversations_dict[conver['id']] = {
                     'user_id': conver['user'], 
-                    'user_name': users[conver['user']]['name']
+                    'name': '_'.join(users[conver['user']]['real_name'].split())
                 }
                 conversations_list.append(conver['id'])
+            if 'is_channel' in conver and conver['is_channel']:
+                conversations_dict[conver['id']] = {
+                    'creator': conver['creator'], 
+                    'is_private': conver['is_private'],
+                    'name': conver['name']
+                }
+            conversations_list.append(conver['id'])
+
         return (conversations_dict, conversations_list)
 
         """
@@ -78,7 +90,7 @@ def fetch_conversations():
             }
         """
 
-def fetch_message_data(payload):
+def fetch_message_data(payload, username):
     r = data = None
     back = 0
 
@@ -100,13 +112,13 @@ def fetch_message_data(payload):
                 for message in data['messages']:
                     messages.append({
                     'user_id': message['user'], 
-                    'user_name': users[message['user']]['name'],
+                    'name': users[message['user']]['name'],
                     'text': message['text'],
                     'ts': message['ts'],
                     'date': datetime.fromtimestamp(float(message['ts'])).strftime('%Y-%m-%d %H:%M:%S')
                 })
-                with open(f"chat_{payload['channel']}_({back}-{back + len(data['messages']) - 1}).txt", 'w') as f:
-                    json.dump(messages, f)
+                with open(f"chat_{username}_({back}-{back + len(data['messages']) - 1}).json", 'w') as f:
+                    json.dump(messages, f, indent=4)
                 back += len(data['messages'])
             else:
                 print(f"Error: {data['error']}")
@@ -130,32 +142,37 @@ if __name__ == "__main__":
             'token': args.token,
         }
 
-        # Create a directory where to store the data
-        dir = 'slack-data'
-        if os.path.exists(dir):
-            shutil.rmtree(dir)
-        os.makedirs(dir)
-        os.chdir(dir) 
-
         # Retrieve users and conversations lists
         retrieve_data('users.list', PAYLOAD)  
         users = fetch_users()
 
-        PAYLOAD['types'] = 'im'
-        retrieve_data('conversations.list', PAYLOAD)
+        PAYLOAD['types'] = 'public_channel,im'
+        retrieve_data('users.conversations', PAYLOAD)
 
         # Select chat to export
         title = 'Please the conversation to export: '
         convers, options = fetch_conversations()
+        print(convers, options)
 
-        option, index = pick([f"Chat {option} with {convers[option]['user_name']}" for option in options], title)
-        PAYLOAD['channel'] = options[index]
+        # option, index = pick([f"Chat {option} with {convers[option]['user_name']}" for option in options], title)
+        # PAYLOAD['channel'] = options[index]
 
-        # Export chat
-        print('\nPreparing to export chat ...\n')
-        fetch_message_data(PAYLOAD)
+        # Create a directory where to store the data
+        dir = "slack-data"
+        if os.path.exists(dir):
+            shutil.rmtree(dir)
+        os.makedirs(dir)
+        os.chdir(dir)
 
-    else:
-        # Auth fail
-        pass
-        
+        for option in options:
+            PAYLOAD['channel'] = option
+
+            username = convers[option]['user_name']
+
+            # Export chat
+            print('\nPreparing to export chat ...\n')
+            fetch_message_data(PAYLOAD, username)
+
+        else:
+            # Auth fail
+            pass
